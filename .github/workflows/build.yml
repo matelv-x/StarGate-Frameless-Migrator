@@ -1,0 +1,30 @@
+name: Build and test migrator
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      - name: Build self-contained executable
+        shell: pwsh
+        run: dotnet publish src/Migration.csproj -c Release -r win-x64 --self-contained true -p:DebugType=None -p:DebugSymbols=false -o artifacts
+      - name: Test migration logic using temporary fixtures
+        shell: pwsh
+        run: |
+          $process = Start-Process -FilePath "$PWD/artifacts/StarGate-Frameless-Migrator.exe" -ArgumentList '--self-test' -PassThru -Wait
+          Get-Content ./artifacts/self-test-results.txt
+          if ($process.ExitCode -ne 0) { throw 'Migration tests failed.' }
+      - uses: actions/upload-artifact@v4
+        with:
+          name: StarGate-Frameless-Migrator-windows-x64
+          path: |
+            artifacts/StarGate-Frameless-Migrator.exe
+            artifacts/self-test-results.txt
