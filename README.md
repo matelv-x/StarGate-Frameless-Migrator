@@ -1,45 +1,31 @@
 # StarGate / Frameless Migrator
 
-Jeden instalator migracyjny dla starszych instalacji **StarGateWebView** i **Framelesswindow** na Windows.
+A single Windows migration installer for older **StarGateWebView** and **Framelesswindow** installations.
 
-**[Pobierz instalator EXE — v0.1.0](https://github.com/matelv-x/StarGate-Frameless-Migrator/releases/tag/v0.1.0)** · [Pełna instrukcja po polsku](docs/Instrukcja-migracji.txt) · [English](README.en.md)
+[Download v0.1.0](https://github.com/matelv-x/StarGate-Frameless-Migrator/releases/tag/v0.1.0) · [Full migration instructions](docs/Migration-guide.txt)
 
-## Jak użyć
+## Usage
 
-1. Pobierz `StarGate-Frameless-Migrator.exe` z Releases. Zapisz go poza katalogiem starego programu, np. w Pobranych.
-2. Zamknij stary program i jego launcher. Uruchom migrator na tym samym koncie Windows, na którym korzystasz z programu.
-3. Wybierz wykrytą instalację. Gdy zainstalowane są oba programy, wybierz, który chcesz zaktualizować. Jeśli nie ma go na liście, kliknij **Wskaż stary folder…**.
-4. Kliknij **Pobierz i migruj**. Program pobierze aktualny instalator z właściwego repozytorium GitHub i sprawdzi jego rozmiar oraz SHA-256.
-5. Dokończ standardowy kreator nowej wersji. Wybierz nowy, pusty katalog. Nie wybieraj folderu kopii `.legacy-…`.
+1. Download `StarGate-Frameless-Migrator.exe` from Releases and save it outside the old application folder.
+2. Close the old application and its launcher. Run the migrator under the Windows account that used the old application.
+3. Select the detected installation. If both applications are installed, choose which one to migrate. Use the folder selection button if automatic detection does not find it.
+4. Start migration and complete the new application's installation wizard, choosing a new empty folder.
 
-Jedna operacja aktualizuje jeden wybrany program. Aby przenieść drugi, uruchom migrator ponownie.
+The migrator downloads the latest published installer from the selected application's GitHub repository, validates the update manifest, size and SHA-256, backs up address settings, and moves the old installation to a sibling `.legacy-…` folder. It imports older Frameless address settings into the current profile format without overwriting existing profiles. After confirming the installed application hash, it updates matching desktop and startup shortcuts.
 
-## Co dzieje się ze starą wersją i adresami
+The old installation backup is retained. On cancellation or error, the migrator attempts to restore it when the original location is free. Recovery information and settings backups are saved under `%LOCALAPPDATA%\StarGate-Frameless-Migration`.
 
-- Rozpoznany stary katalog jest **przenoszony do folderu obok z końcówką `.legacy-…`**, a nie automatycznie kasowany.
-- Pliki JSON zapisanych adresów i profili są zabezpieczane w `%LOCALAPPDATA%\StarGate-Frameless-Migration\[sesja]\settings`; oryginały pozostają na miejscu.
-- Starszy pojedynczy adres Frameless jest importowany do obecnego formatu `Profiles`, bez nadpisywania istniejącego profilu.
-- Po potwierdzeniu nowej instalacji migrowane są skróty pulpitu i autostartu prowadzące do wybranej starej wersji. Ich kopie również są zachowywane.
-- Po anulowaniu lub błędzie program próbuje przywrócić stary katalog, jeśli jego poprzednia ścieżka jest wolna. Przy konflikcie zachowuje kopię i podaje jej lokalizację.
+## Requirements and scope
 
-Szczegóły odzyskiwania, uprawnień i obsługiwanych lokalizacji są w [instrukcji](docs/Instrukcja-migracji.txt).
+Windows x64, internet access, and access to the relevant GitHub repository. The executable includes .NET. On Windows ARM64 it requires x64 emulation and downloads the current x64 application release.
 
-## Wymagania i dostęp GitHub
+This migrator repository is public. **Framelesswindow remains private** and requires an authorized Git Credential Manager account. No credentials are embedded in this project or release. Browser sign-in alone may not provide repository access.
 
-- Windows x64; środowisko .NET jest zawarte w EXE. Na Windows ARM64 wymagane jest uruchamianie aplikacji x64 przez emulację; pobierana nowa wersja również jest x64.
-- Internet do pobrania nowego wydania.
-- Repozytorium migratora jest publiczne. **Framelesswindow pozostaje prywatne** — jego aktualizacja wymaga dostępu przez Git Credential Manager. Migrator nie zawiera tokenów ani haseł i nie zapisuje poświadczeń. Sama sesja w przeglądarce nie zastępuje dostępu Git.
-- Nie uruchamiaj migratora na innym koncie administratora: ma ono inne `%LOCALAPPDATA%`.
+**v0.1.0 is a prerelease.** Fixture-based tests passed, and live release metadata access was checked for both applications. Full migration of a real legacy installation has not been tested.
 
-## Status wydania i testów
+## Build and test
 
-To pierwsze wydanie testowe **v0.1.0**. Testy na sztucznych katalogach obejmują wykrywanie obu aplikacji, niestandardowe lokalizacje, zachowanie i import adresów, konflikty profili, odrzucanie katalogów źródłowych i niewłaściwego pakietu oraz ograniczenia adresów pobierania.
-
-Sprawdzono odczyt manifestów obu wydań z GitHuba. **Nie wykonano pełnej migracji rzeczywistej starej instalacji.** Folder kopii jest zachowywany, aby umożliwić odzyskanie danych.
-
-## Kompilacja i testy
-
-Wymagany .NET SDK 8 lub nowszy na Windows:
+On Windows with .NET SDK 8 or newer:
 
 ```powershell
 dotnet publish src/Migration.csproj -c Release -r win-x64 --self-contained true -p:DebugType=None -p:DebugSymbols=false -o artifacts
@@ -47,10 +33,6 @@ dotnet publish src/Migration.csproj -c Release -r win-x64 --self-contained true 
 Get-Content ./artifacts/self-test-results.txt
 ```
 
-`--self-test` używa wyłącznie sztucznych katalogów tymczasowych. Nie migruje zainstalowanych programów. Opcjonalne `--check-releases` sprawdza metadane wydań z GitHuba bez instalacji; nie jest uruchamiane w publicznym CI, ponieważ Framelesswindow wymaga prywatnego dostępu.
+The self-test uses temporary fixtures only. The optional `--check-releases` switch checks release metadata without installing; it is excluded from public CI because Framelesswindow requires private repository access.
 
-## Powiązane programy
-
-- [StarGateWebView](https://github.com/matelv-x/StarGateWebView)
-- [Framelesswindow](https://github.com/matelv-x/Framelesswindow) — dostęp do repozytorium prywatnego wymagany
 

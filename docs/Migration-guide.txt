@@ -1,0 +1,36 @@
+STAR GATE / FRAMELESS — UNIFIED LEGACY MIGRATION INSTALLER
+
+Save StarGate-Frameless-Migrator.exe outside the old application directory, for example in Downloads. Close the application and its launcher before starting migration.
+
+USAGE
+1. The migrator discovers installations using legacy launcher.json files and StarGate/Frameless directories at the root of the system drive and under LocalAppData\Programs.
+2. Select the application to update. If both are installed, choose one. Each operation updates only the selected application. If it is not listed, use the folder selection button to locate the old installation.
+3. The latest published installer is downloaded from the corresponding matelv-x GitHub repository. The application name, architecture, installer size and SHA-256 are verified against the release update manifest. No credentials are embedded in the executable.
+4. Address and profile JSON files are backed up under LocalAppData\StarGate-Frameless-Migration\[session]\settings. Their originals are not deleted. A legacy single Frameless address is imported into the current Profiles format without overwriting existing profiles.
+5. The recognized old installation directory is MOVED to a sibling folder named .legacy-[timestamp-identifier]. The old installation is NOT automatically deleted. This also preserves any unusual files stored in that directory.
+6. The standard installation wizard for the new version opens. Choose a new empty directory. Do not select the .legacy backup or an existing directory containing another application. Complete the wizard. If it waits for the newly opened application to close, close that application so migration verification can finish.
+7. The migrator verifies the installed package identifier and application DLL SHA-256 and checks preservation of address settings. Matching desktop and startup shortcuts pointing to the selected old application are updated; original shortcuts are backed up first.
+
+CANCELLATION AND RECOVERY
+On cancellation or installation failure, the migrator attempts to move the old directory back when its original location is free. It never overwrites a new directory during recovery. The session's recovery.json file records the original and backup locations and the launcher configuration backup.
+Keep the .legacy directory and the session directory until you have checked the new application.
+After a power failure, you can move the .legacy directory back to the OldRoot location recorded in recovery.json, provided that location is free. Original settings are backed up under settings.
+
+ACCESS AND PERMISSIONS
+The migrator repository is public. Framelesswindow remains a private application repository and requires an authorized Git Credential Manager account. Browser sign-in alone may not grant Git access. The migrator does not ask for a password and does not save the token.
+Run the migrator as the same Windows user that used the old application. If Windows denies moving a directory on C:\, migration stops. Administrator permission for the same account may be required. Do not switch to a different administrator account, because it has a different LocalAppData directory.
+The executable targets Windows x64 and includes .NET. On Windows ARM64, x64 emulation is required and the downloaded application release is also x64; this is not a native ARM64 installer.
+
+VALIDATION STATUS
+Fixture-based tests cover detection of both applications and custom locations, rejection of source projects and shared application directories, byte-for-byte settings backups, import of older Frameless address formats, preservation of existing profiles, rejection of the wrong package and download host restrictions.
+Live release metadata access was checked for both applications, including private repository authentication. Full migration of a real legacy installation has not been tested. Version v0.1.0 is a prerelease.
+
+SOURCE AND BUILD
+The source ZIP contains the project and tests. On Windows with .NET SDK 8 or newer:
+dotnet publish src/Migration.csproj -c Release -r win-x64 --self-contained true -p:DebugType=None -p:DebugSymbols=false -o artifacts
+
+Fixture tests without migration:
+StarGate-Frameless-Migrator.exe --self-test
+
+Release metadata check without installation:
+StarGate-Frameless-Migrator.exe --check-releases
