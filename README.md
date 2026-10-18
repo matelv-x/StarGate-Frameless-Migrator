@@ -2,13 +2,23 @@
 
 A single Windows migration installer for older **StarGateWebView** and **Framelesswindow** installations.
 
-[Download v0.1.0](https://github.com/matelv-x/StarGate-Frameless-Migrator/releases/tag/v0.1.0) · [Full migration instructions](docs/Migration-guide.txt)
+[Download v0.2.0](https://github.com/matelv-x/StarGate-Frameless-Migrator/releases/tag/v0.2.0) · [Full migration instructions](docs/Migration-guide.txt)
+
+## Language and private repository sign-in
+
+The installer starts in **English**, even on a Polish Windows account. The language selector offers **English**, **System language**, and **Polski**. System language currently supports English and Polish; other system languages fall back to English. GitHub documentation remains English only.
+
+Use **Sign in to GitHub…** before migrating Framelesswindow if you do not already have repository access configured. Git Credential Manager opens its authentication dialog or your browser. Complete sign-in using an account that can read the private repository; the migrator then verifies access and shows a confirmation. You can cancel sign-in. No installation is moved while signing in.
+
+Git for Windows with Git Credential Manager must be installed. The migrator never embeds an OAuth client secret or a personal token, and keeps its authenticated session in memory. Git Credential Manager handles the authentication flow and any OS credential storage. Your account must already have permission to read Framelesswindow; signing in does not grant repository membership.
+
+Authentication options follow the [official Git Credential Manager documentation](https://github.com/git-ecosystem/git-credential-manager/blob/main/docs/environment.md#gcm_interactive).
 
 ## Usage
 
 1. Download `StarGate-Frameless-Migrator.exe` from Releases and save it outside the old application folder.
 2. Close the old application and its launcher. Run the migrator under the Windows account that used the old application.
-3. Select the detected installation. If both applications are installed, choose which one to migrate. Use the folder selection button if automatic detection does not find it.
+3. For Framelesswindow, use **Sign in to GitHub…** if needed. Then select the detected installation. If both applications are installed, choose which one to migrate. Use the folder selection button if automatic detection does not find it.
 4. Start migration and complete the new application's installation wizard, choosing a new empty folder.
 
 The migrator downloads the latest published installer from the selected application's GitHub repository, validates the update manifest, size and SHA-256, backs up address settings, and moves the old installation to a sibling `.legacy-…` folder. It imports older Frameless address settings into the current profile format without overwriting existing profiles. After confirming the installed application hash, it updates matching desktop and startup shortcuts.
@@ -21,7 +31,7 @@ Windows x64, internet access, and access to the relevant GitHub repository. The 
 
 This migrator repository is public. **Framelesswindow remains private** and requires an authorized Git Credential Manager account. No credentials are embedded in this project or release. Browser sign-in alone may not provide repository access.
 
-**v0.1.0 is a prerelease.** Fixture-based tests passed, and live release metadata access was checked for both applications. Full migration of a real legacy installation has not been tested.
+**v0.2.0 is a prerelease.** Fixture-based tests passed, and live release metadata access was checked for both applications. Language selection, the actual form controls, interactive sign-in setup, cancellation, access denial and credential isolation on redirects are also covered by tests using fixtures and simulated GitHub responses. Full migration of a real legacy installation and a fresh interactive browser sign-in have not been tested.
 
 ## Build and test
 
@@ -34,5 +44,6 @@ Get-Content ./artifacts/self-test-results.txt
 ```
 
 The self-test uses temporary fixtures only. The optional `--check-releases` switch checks release metadata without installing; it is excluded from public CI because Framelesswindow requires private repository access.
+
 
 

@@ -2,6 +2,13 @@ STAR GATE / FRAMELESS — UNIFIED LEGACY MIGRATION INSTALLER
 
 Save StarGate-Frameless-Migrator.exe outside the old application directory, for example in Downloads. Close the application and its launcher before starting migration.
 
+LANGUAGE
+The installer starts in English. Select English, System language or Polski from the language list. System language supports English and Polish; unsupported Windows languages use English. The downloadable documentation is English only.
+
+PRIVATE REPOSITORY SIGN-IN
+Click Sign in to GitHub… to authenticate for Framelesswindow. Complete the Git Credential Manager or browser dialog with an account that already has permission to read matelv-x/Framelesswindow. The migrator verifies private repository release access and displays a confirmation. Cancel sign-in stops authentication without starting migration.
+Git for Windows with Git Credential Manager is required. Authentication is delegated to Git Credential Manager; the migrator does not ask you to paste a token and keeps its session credential only in memory. No credentials are embedded in the public EXE. Signing in does not itself grant access to the private repository.
+
 USAGE
 1. The migrator discovers installations using legacy launcher.json files and StarGate/Frameless directories at the root of the system drive and under LocalAppData\Programs.
 2. Select the application to update. If both are installed, choose one. Each operation updates only the selected application. If it is not listed, use the folder selection button to locate the old installation.
@@ -17,13 +24,13 @@ Keep the .legacy directory and the session directory until you have checked the 
 After a power failure, you can move the .legacy directory back to the OldRoot location recorded in recovery.json, provided that location is free. Original settings are backed up under settings.
 
 ACCESS AND PERMISSIONS
-The migrator repository is public. Framelesswindow remains a private application repository and requires an authorized Git Credential Manager account. Browser sign-in alone may not grant Git access. The migrator does not ask for a password and does not save the token.
+The migrator repository is public. Framelesswindow remains a private application repository and requires an authorized Git Credential Manager account. Browser sign-in alone may not grant Git access. The migrator delegates sign-in to Git Credential Manager and does not write the token to its own files.
 Run the migrator as the same Windows user that used the old application. If Windows denies moving a directory on C:\, migration stops. Administrator permission for the same account may be required. Do not switch to a different administrator account, because it has a different LocalAppData directory.
 The executable targets Windows x64 and includes .NET. On Windows ARM64, x64 emulation is required and the downloaded application release is also x64; this is not a native ARM64 installer.
 
 VALIDATION STATUS
 Fixture-based tests cover detection of both applications and custom locations, rejection of source projects and shared application directories, byte-for-byte settings backups, import of older Frameless address formats, preservation of existing profiles, rejection of the wrong package and download host restrictions.
-Live release metadata access was checked for both applications, including private repository authentication. Full migration of a real legacy installation has not been tested. Version v0.1.0 is a prerelease.
+Live release metadata access was checked for both applications, including private repository authentication. Fixture tests also cover actual form language changes, interactive authentication options, cancellation, access denial and credential isolation on redirects. Full migration of a real legacy installation and a fresh interactive browser sign-in have not been tested. Version v0.2.0 is a prerelease.
 
 SOURCE AND BUILD
 The source ZIP contains the project and tests. On Windows with .NET SDK 8 or newer:
@@ -34,3 +41,4 @@ StarGate-Frameless-Migrator.exe --self-test
 
 Release metadata check without installation:
 StarGate-Frameless-Migrator.exe --check-releases
+

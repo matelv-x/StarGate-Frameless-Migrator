@@ -33,6 +33,29 @@ static class Tests
             var installed = Path.Combine(root, "new-install"); Directory.CreateDirectory(Path.Combine(installed, "app-x64")); File.WriteAllText(Path.Combine(installed, "app-x64", Program.Gate.Exe), "fixture"); File.WriteAllText(Path.Combine(installed, "launcher-package.json"), "{\"PackageId\":\"wrong-app\"}"); File.WriteAllText(bootstrap, JsonSerializer.Serialize(new { InstalledBaseDir = installed }));
             Check(MigrationForm.FindNewInstallation(bootstrap, Program.Gate, gate, gate + ".legacy-test") == null, "Reject installation of wrong package", report);
             Check(!GitHubDownload.Trusted(new Uri("http://github.com/x")) && !GitHubDownload.Trusted(new Uri("https://github.com.evil.example/x")) && !GitHubDownload.Trusted(new Uri("https://user@github.com/x")) && GitHubDownload.Trusted(new Uri("https://release-assets.githubusercontent.com/x")), "Restrict download transport and redirect hosts", report);
+            Check(Ui.ResolveLanguage("en", new System.Globalization.CultureInfo("pl-PL")) == "en", "English stays the default on a Polish computer", report);
+            Check(Ui.ResolveLanguage("system", new System.Globalization.CultureInfo("pl-PL")) == "pl" && Ui.ResolveLanguage("system", new System.Globalization.CultureInfo("en-US")) == "en", "System-language mode selects supported Polish or English", report);
+            Check(Ui.ResolveLanguage("system", new System.Globalization.CultureInfo("de-DE")) == "en" && Ui.ResolveLanguage("system", new System.Globalization.CultureInfo("ja-JP")) == "en", "Unsupported system languages fall back to English", report);
+            Ui.Language = "pl"; Check(Ui.T("Sign in", "Zaloguj") == "Zaloguj", "Explicit Polish language uses the translated UI", report); Ui.Language = "en";
+            var interactive = GitHubDownload.CredentialStartInfo(@"C:\FixtureGit\cmd\git.exe", true, new IntPtr(123));
+            Check(interactive.Environment["GCM_INTERACTIVE"] == "true" && interactive.Environment["GCM_GUI_PROMPT"] == "true" && interactive.Environment["GCM_MODAL_PARENTHWND"] == "123" && interactive.Environment["GCM_GITHUB_AUTHMODES"] == "browser,device", "Sign-in permits interactive OAuth and parents its dialog", report);
+            var silent = GitHubDownload.CredentialStartInfo(@"C:\FixtureGit\cmd\git.exe", false, IntPtr.Zero);
+            Check(silent.Environment["GCM_INTERACTIVE"] == "false" && silent.Environment["GCM_GUI_PROMPT"] == "false" && silent.Environment["GCM_TRACE_SECRETS"] == "0", "Background release checks do not show login prompts or trace secrets", report);
+            AuthTests.Run(report).GetAwaiter().GetResult();
+            using (var form = new MigrationForm(new[] { new Installation(Program.Gate, gate), new Installation(Program.Frame, frame) }))
+            {
+                IEnumerable<Control> Descendants(Control parent) => parent.Controls.Cast<Control>().SelectMany(c => new[] { c }.Concat(Descendants(c)));
+                var controls = Descendants(form).ToArray();
+                var signin = controls.OfType<Button>().Single(b => b.Text == "Sign in to GitHub…");
+                Check(form.Text.Contains("legacy migration") && controls.OfType<Button>().Any(b => b.Text == "Download and migrate") && signin.Enabled, "Actual form starts in English with an enabled Sign in to GitHub button", report);
+                var selection = controls.OfType<ComboBox>().Single(c => c.AccessibleName == "Application to update");
+                Check(selection.Items.Count == 2, "Actual form offers both fixture applications without changing either", report);
+                var languages = controls.OfType<ComboBox>().Single(c => c.AccessibleName == "Language");
+                languages.SelectedIndex = 2;
+                Check(signin.Text == "Zaloguj się do GitHuba…" && form.Text.Contains("migracja"), "Language selection updates existing form controls to Polish", report);
+                languages.SelectedIndex = 0;
+                Check(signin.Text == "Sign in to GitHub…" && form.Text.Contains("legacy migration"), "Language selection switches existing form controls back to English", report);
+            }
             File.WriteAllLines(Path.Combine(AppContext.BaseDirectory, "self-test-results.txt"), report); return 0;
         }
         catch (Exception ex) { report.Add("FAIL: " + ex); File.WriteAllLines(Path.Combine(AppContext.BaseDirectory, "self-test-results.txt"), report); return 1; }
